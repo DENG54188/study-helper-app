@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专注学习助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- PWA manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="专注学习助手">
+    <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192x192.png">
+    <meta name="theme-color" content="#165DFF">
+    <link rel="icon" sizes="192x192" href="icons/icon-192x192.png">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        accent: '#FF7D00',
+                        neutral: '#F5F7FA',
+                        dark: '#1D2129',
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .bg-blur {
+                backdrop-filter: blur(8px);
+            }
+            .transition-all-300 {
+                transition: all 300ms ease-in-out;
+            }
+            .hover-scale {
+                @apply hover:scale-105 transition-all duration-300;
+            }
+            .card-shadow {
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+            }
+            .error-tag {
+                @apply px-3 py-1 rounded-full text-sm font-medium;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen text-dark">
+    <!-- 顶部导航栏 -->
+    <header class="fixed top-0 left-0 right-0 bg-white/80 bg-blur z-50 border-b border-gray-200/50 transition-all duration-300">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-book text-primary text-2xl"></i>
+                <h1 class="text-xl font-bold text-primary">专注学习助手</h1>
+            </div>
+            <nav class="hidden md:flex space-x-8">
+                <a href="#timer" class="text-gray-600 hover:text-primary transition-all-300">计时器</a>
+                <a href="#pomodoro" class="text-gray-600 hover:text-primary transition-all-300">番茄钟</a>
+                <a href="#noise" class="text-gray-600 hover:text-primary transition-all-300">白噪音</a>
+                <a href="#mistakes" class="text-gray-600 hover:text-primary transition-all-300">错题收集</a>
+                <a href="#stats" class="text-gray-600 hover:text-primary transition-all-300">学习统计</a>
+            </nav>
+            <button class="md:hidden text-gray-600" id="menu-toggle">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+        </div>
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
+            <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
+                <a href="#timer" class="py-2 text-gray-600 hover:text-primary transition-all-300">计时器</a>
+                <a href="#pomodoro" class="py-2 text-gray-600 hover:text-primary transition-all-300">番茄钟</a>
+                <a href="#noise" class="py-2 text-gray-600 hover:text-primary transition-all-300">白噪音</a>
+                <a href="#mistakes" class="py-2 text-gray-600 hover:text-primary transition-all-300">错题收集</a>
+                <a href="#stats" class="py-2 text-gray-600 hover:text-primary transition-all-300">学习统计</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 pt-24 pb-16">
+        <!-- 欢迎信息 -->
+        <section class="text-center mb-12">
+            <h2 class="text-[clamp(1.8rem,4vw,3rem)] font-bold text-primary mb-4 text-shadow">
+                让每一分钟都有价值
+            </h2>
+            <p class="text-gray-600 max-w-2xl mx-auto text-lg">
+                记录学习时间，专注当下，提升效率。白噪音助你进入深度专注状态，错题收集功能帮你分析薄弱环节。
+            </p>
+        </section>
+
+        <!-- 计时器区域 -->
+        <section id="timer" class="bg-white rounded-2xl p-8 mb-12 card-shadow transform hover:-translate-y-1 transition-all duration-300">
+            <h3 class="text-2xl font-bold mb-6 text-primary flex items-center">
+                <i class="fa fa-clock-o mr-3"></i>学习计时器
+            </h3>
+            
+            <div class="flex flex-col md:flex-row gap-8">
+                <!-- 计时器显示 -->
+                <div class="flex-1 bg-neutral rounded-xl p-6 text-center">
+                    <div id="timer-display" class="text-[clamp(2.5rem,5vw,4rem)] font-bold text-dark mb-4">
+                        00:00:00
+                    </div>
+                    <div class="flex justify-center space-x-4">
+                        <button id="start-timer" class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg shadow-lg hover-scale flex items-center">
+                            <i class="fa fa-play mr-2"></i>开始学习
+                        </button>
+                        <button id="pause-timer" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg shadow-lg hover-scale flex items-center hidden">
+                            <i class="fa fa-pause mr-2"></i>暂停
+                        </button>
+                        <button id="reset-timer" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg shadow-lg hover-scale flex items-center">
+                            <i class="fa fa-refresh mr-2"></i>重置
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 学习统计 -->
+                <div class="flex-1 bg-neutral rounded-xl p-6">
+                    <h4 class="text-lg font-semibold mb-4 text-gray-700">学习统计</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <p class="text-gray-500 text-sm mb-1">今日学习</p>
+                            <p id="today-stats" class="text-xl font-bold text-primary">0小时0分钟</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <p class="text-gray-500 text-sm mb-1">本周学习</p>
+                            <p id="week-stats" class="text-xl font-bold text-primary">0小时0分钟</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <p class="text-gray-500 text-sm mb-1">本月学习</p>
+                            <p id="month-stats" class="text-xl font-bold text-primary">0小时0分钟</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <p class="text-gray-500 text-sm mb-1">总学习时长</p>
+                            <p id="total-stats" class="text-xl font-bold text-primary">0小时0分钟</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 番茄钟区域 -->
+        <section id="pomodoro" class="bg-white rounded-2xl p-8 mb-12 card-shadow transform hover:-translate-y-1 transition-all duration-300">
+            <h3 class="text-2xl font-bold mb-6 text-primary flex items-center">
+                <i class="fa fa-tomato mr-3"></i>番茄钟
+            </h3>
+            
+            <div class="flex flex-col md:flex-row gap-8">
+                <!-- 番茄钟显示 -->
+                <div class="flex-1 bg-neutral rounded-xl p-6 text-center">
+                    <div id="pomodoro-display" class="text-[clamp(2.5rem,5vw,4rem)] font-bold text-dark mb-4">
+                        25:00
+                    </div>
+                    <div class="flex justify-center space-x-4 mb-6">
+                        <button id="start-pomodoro" class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg shadow-lg hover-scale flex items-center">
+                            <i class="fa fa-play mr-2"></i>开始专注
+                        </button>
+                        <button id="pause-pomodoro" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg shadow-lg hover-scale flex items-center hidden">
+                            <i class="fa fa-pause mr-2"></i>暂停
+                        </button>
+                        <button id="reset-pomodoro" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg shadow-lg hover-scale flex items-center">
+                            <i class="fa fa-refresh mr-2"></i>重置
+                        </button>
+                    </div>
+                    
+                    <div class="flex justify-center space-x-4">
+                        <button id="pomodoro-mode" class="bg-primary text-white px-4 py-2 rounded-lg shadow hover-scale">
+                            专注模式
+                        </button>
+                        <button id="short-break-mode" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg shadow hover-scale">
+                            休息模式
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 番茄钟统计 -->
+                <div class="flex-1 bg-neutral rounded-xl p-6">
+                    <h4 class="text-lg font-semibold mb-4 text-gray-700">番茄钟记录</h4>
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <p class="text-gray-500 text-sm mb-1">今日完成番茄数</p>
+                            <p id="pomodoro-count" class="text-2xl font-bold text-primary">0</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm mb-1">当前循环</p>
+                            <p id="current-cycle" class="text-2xl font-bold text-primary">1/4</p>
+                        </div>
+                    </div>
+                    
+                    <h4 class="text-lg font-semibold mb-4 text-gray-700">今日番茄记录</h4>
+                    <div id="pomodoro-history" class="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                        <!-- 番茄记录将通过JS动态生成 -->
+                        <div class="text-gray-500 text-center py-4">
+                            还没有完成任何番茄钟
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 白噪音区域 -->
+        <section id="noise" class="bg-white rounded-2xl p-8 mb-12 card-shadow transform hover:-translate-y-1 transition-all duration-300">
+            <h3 class="text-2xl font-bold mb-6 text-primary flex items-center">
+                <i class="fa fa-volume-up mr-3"></i>白噪音
+            </h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 白噪音选项 -->
+                <div class="noise-card bg-neutral rounded-xl p-6 text-center hover-scale cursor-pointer" data-noise="rain">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-cloud-rain text-primary text-2xl"></i>
+                    </div>
+                    <h4 class="font-semibold mb-2">雨声</h4>
+                    <p class="text-gray-500 text-sm">舒缓的雨滴声，帮助专注</p>
+                </div>
+                
+                <div class="noise-card bg-neutral rounded-xl p-6 text-center hover-scale cursor-pointer" data-noise="forest">
+                    <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-tree text-secondary text-2xl"></i>
+                    </div>
+                    <h4 class="font-semibold mb-2">森林</h4>
+                    <p class="text-gray-500 text-sm">鸟鸣和树叶的沙沙声</p>
+                </div>
+                
+                <div class="noise-card bg-neutral rounded-xl p-6 text-center hover-scale cursor-pointer" data-noise="waves">
+                    <div class="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-water text-blue-500 text-2xl"></i>
+                    </div>
+                    <h4 class="font-semibold mb-2">海浪</h4>
+                    <p class="text-gray-500 text-sm">平静的海浪声，放松身心</p>
+                </div>
+                
+                <div class="noise-card bg-neutral rounded-xl p-6 text-center hover-scale cursor-pointer" data-noise="coffee">
+                    <div class="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-coffee text-amber-500 text-2xl"></i>
+                    </div>
+                    <h4 class="font-semibold mb-2">咖啡馆</h4>
+                    <p class="text-gray-500 text-sm">温和的交谈声和杯碟碰撞声</p>
+                </div>
+                
+                <div class="noise-card bg-neutral rounded-xl p-6 text-center hover-scale cursor-pointer" data-noise="fireplace">
+                    <div class="w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-fire text-orange-500 text-2xl"></i>
+                    </div>
+                    <h4 class="font-semibold mb-2">壁炉</h4>
+                    <p class="text-gray-500 text-sm">温暖的火焰燃烧声</p>
+                </div>
+                
+                <div class="noise-card bg-neutral rounded-xl p-6 text-center hover-scale cursor-pointer" data-noise="white">
+                    <div class="w-16 h-16 bg-gray-300/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-snowflake-o text-gray-400 text-2xl"></i>
+                    </div>
+                    <h4 class="font-semibold mb-2">白噪音</h4>
+                    <p class="text-gray-500 text-sm">均匀的静态噪声，屏蔽干扰</p>
+                </div>
+            </div>
+            
+            <!-- 音量控制 -->
+            <div class="mt-8 bg-neutral rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-semibold">音量控制</h4>
+                    <div class="flex items-center">
+                        <button id="noise-toggle" class="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-lg hover-scale">
+                            <i class="fa fa-pause mr-2"></i>暂停
+                        </button>
+                    </div>
+                </div>
+                <input type="range" id="volume-slider" min="0" max="100" value="70" 
+                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary">
+                <div class="flex justify-between text-xs text-gray-500 mt-2">
+                    <span>静音</span>
+                    <span>最大</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 错题收集区域 -->
+        <section id="mistakes" class="bg-white rounded-2xl p-8 mb-12 card-shadow transform hover:-translate-y-1 transition-all duration-300">
+            <h3 class="text-2xl font-bold mb-6 text-primary flex items-center">
+                <i class="fa fa-exclamation-triangle mr-3"></i>错题收集与分析
+            </h3>
+            
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- 错题上传区域 -->
+                <div class="flex-1 bg-neutral rounded-xl p-6">
+                    <h4 class="font-semibold mb-4">添加新错题</h4>
+                    
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors duration-300 cursor-pointer mb-6" id="drop-area">
+                        <input type="file" id="file-input" accept="image/*" capture="environment" class="hidden">
+                        <i class="fa fa-upload text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600 mb-2">点击上传或拖放错题照片</p>
+                        <p class="text-gray-500 text-sm">也可以直接拍照</p>
+                    </div>
+                    
+                    <div class="flex justify-center space-x-4">
+                        <button id="take-photo" class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg shadow-lg hover-scale flex items-center">
+                            <i class="fa fa-camera mr-2"></i>拍照
+                        </button>
+                        <button id="upload-photo" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg shadow-lg hover-scale flex items-center">
+                            <i class="fa fa-file-image-o mr-2"></i>从相册选择
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 错题分析结果 -->
+                <div class="flex-2 bg-neutral rounded-xl p-6">
+                    <h4 class="font-semibold mb-4">错题分析</h4>
+                    
+                    <div id="analysis-result" class="hidden">
+                        <div class="bg-white rounded-lg p-6 mb-6">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 mr-4">
+                                    <img id="mistake-preview" src="" alt="错题预览" class="w-24 h-24 object-cover rounded-lg">
+                                </div>
+                                <div class="flex-1">
+                                    <h5 class="font-semibold text-lg mb-2">错误分析</h5>
+                                    <div class="flex flex-wrap gap-2 mb-3">
+                                        <span class="error-tag bg-red-100 text-red-800" id="error-type">概念错误</span>
+                                        <span class="error-tag bg-yellow-100 text-yellow-800" id="error-topic">函数</span>
+                                        <span class="error-tag bg-blue-100 text-blue-800" id="error-difficulty">中等难度</span>
+                                    </div>
+                                    <p id="error-description" class="text-gray-600">
+                                        对函数的基本概念理解不透彻，特别是函数的定义域和值域部分。建议复习相关章节，并做更多针对性练习。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg p-6">
+                            <h5 class="font-semibold text-lg mb-4">改进建议</h5>
+                            <ul id="improvement-suggestions" class="space-y-2 text-gray-600">
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>复习函数的基本定义和性质</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>完成5道关于定义域和值域的练习题</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>创建函数概念的思维导图</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div id="no-analysis" class="text-center py-12">
+                        <i class="fa fa-file-text-o text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">上传错题照片后将显示分析结果</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 错题记录 -->
+            <div class="mt-8">
+                <h4 class="font-semibold mb-4">错题记录</h4>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white rounded-lg overflow-hidden">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">科目</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">错误类型</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mistakes-list" class="divide-y divide-gray-200">
+                            <!-- 错题记录将通过JS动态生成 -->
+                            <tr>
+                                <td colspan="5" class="py-8 text-center text-gray-500">
+                                    还没有错题记录
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 学习统计 -->
+        <section id="stats" class="bg-white rounded-2xl p-8 mb-12 card-shadow transform hover:-translate-y-1 transition-all duration-300">
+            <h3 class="text-2xl font-bold mb-6 text-primary flex items-center">
+                <i class="fa fa-bar-chart mr-3"></i>学习数据
+            </h3>
+            
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- 图表 -->
+                <div class="flex-2 bg-neutral rounded-xl p-6">
+                    <h4 class="font-semibold mb-4">学习时长趋势</h4>
+                    <div class="aspect-video">
+                        <canvas id="study-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 最近学习记录 -->
+                <div class="flex-1 bg-neutral rounded-xl p-6">
+                    <h4 class="font-semibold mb-4">最近学习记录</h4>
+                    <div id="recent-studies" class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                        <!-- 学习记录将通过JS动态生成 -->
+                        <div class="text-gray-500 text-center py-8">
+                            <i class="fa fa-clock-o text-4xl mb-4 block opacity-30"></i>
+                            <p>还没有学习记录</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center space-x-2 mb-4 md:mb-0">
+                    <i class="fa fa-book text-primary text-xl"></i>
+                    <span class="font-bold text-primary">专注学习助手</span>
+                </div>
+                <div class="text-gray-500 text-sm">
+                    © 2025 专注学习助手 - 让学习更高效
+                </div>
+                <div class="flex space-x-4 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-400 hover:text-primary transition-all-300">
+                        <i class="fa fa-github text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-primary transition-all-300">
+                        <i class="fa fa-twitter text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-primary transition-all-300">
+                        <i class="fa fa-envelope text-xl"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 音频元素 -->
+    <audio id="rain-sound" loop>
+        <source src="https://freesound.org/data/previews/191/191817_1166810-lq.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="forest-sound" loop>
+        <source src="https://freesound.org/data/previews/192/192049_1167106-lq.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="waves-sound" loop>
+        <source src="https://freesound.org/data/previews/198/198887_2570109-lq.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="coffee-sound" loop>
+        <source src="https://freesound.org/data/previews/328/328593_5153615-lq.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="fireplace-sound" loop>
+        <source src="https://freesound.org/data/previews/367/367785_4953023-lq.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="white-sound" loop>
+        <source src="https://freesound.org/data/previews/133/133285_2955021-lq.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // 移动菜单切换
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                    
+                    // 如果是移动菜单，点击后关闭
+                    const mobileMenu = document.getElementById('mobile-menu');
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                }
+            });
+        });
+
+        // 计时器功能
+        let timerInterval;
+        let seconds = 0;
+        let isTimerRunning = false;
+        
+        const timerDisplay = document.getElementById('timer-display');
+        const startTimerBtn = document.getElementById('start-timer');
+        const pauseTimerBtn = document.getElementById('pause-timer');
+        const resetTimerBtn = document.getElementById('reset-timer');
+        
+        function formatTime(totalSeconds) {
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const secs = totalSeconds % 60;
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function startTimer() {
+            if (!isTimerRunning) {
+                isTimerRunning = true;
+                startTimerBtn.classList.add('hidden');
+                pauseTimerBtn.classList.remove('hidden');
+                
+                timerInterval = setInterval(() => {
+                    seconds++;
+                    timerDisplay.textContent = formatTime(seconds);
+                }, 1000);
+            }
+        }
+        
+        function pauseTimer() {
+            if (isTimerRunning) {
+                isTimerRunning = false;
+                clearInterval(timerInterval);
+                startTimerBtn.classList.remove('hidden');
+                pauseTimerBtn.classList.add('hidden');
+                
+                // 保存学习记录
+                saveStudyRecord(seconds);
+                
+                // 更新统计信息
+                updateStats();
+            }
+        }
+        
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            seconds = 0;
+            timerDisplay.textContent = formatTime(seconds);
+            startTimerBtn.classList.remove('hidden');
+            pauseTimerBtn.classList.add('hidden');
+        }
+        
+        startTimerBtn.addEventListener('click', startTimer);
+        pauseTimerBtn.addEventListener('click', pauseTimer);
+        resetTimerBtn.addEventListener('click', resetTimer);
+        
+        // 白噪音功能
+        const noiseToggle = document.getElementById('noise-toggle');
+        const volumeSlider = document.getElementById('volume-slider');
+        const noiseCards = document.querySelectorAll('.noise-card');
+        
+        let currentNoise = null;
+        let isNoisePlaying = false;
+        
+        function playNoise(noiseType) {
+            // 停止当前播放的噪音
+            if (currentNoise) {
+                document.getElementById(`${currentNoise}-sound`).pause();
+            }
+            
+            currentNoise = noiseType;
+            const audioElement = document.getElementById(`${noiseType}-sound`);
+            
+            // 设置音量
+            audioElement.volume = volumeSlider.value / 100;
+            
+            // 播放新的噪音
+            audioElement.play();
+            isNoisePlaying = true;
+            updateNoiseButton();
+            
+            // 高亮当前选中的噪音卡片
+            noiseCards.forEach(card => {
+                if (card.dataset.noise === noiseType) {
+                    card.classList.add('ring-2', 'ring-primary');
+                } else {
+                    card.classList.remove('ring-2', 'ring-primary');
+                }
+            });
+        }
+        
+        function toggleNoise() {
+            if (currentNoise) {
+                const audioElement = document.getElementById(`${currentNoise}-sound`);
+                
+                if (isNoisePlaying) {
+                    audioElement.pause();
+                } else {
+                    audioElement.play();
+                }
+                
+                isNoisePlaying = !isNoisePlaying;
+                updateNoiseButton();
+            }
+        }
+        
+        function updateNoiseButton() {
+            if (isNoisePlaying) {
+                noiseToggle.innerHTML = '<i class="fa fa-pause mr-2"></i>暂停';
+            } else {
+                noiseToggle.innerHTML = '<i class="fa fa-play mr-2"></i>播放';
+            }
+        }
+        
+        // 噪音卡片点击事件
+        noiseCards.forEach(card => {
+            card.addEventListener('click', () => {
+                playNoise(card.dataset.noise);
+            });
+        });
+        
+        // 噪音控制事件
+        noiseToggle.addEventListener('click', toggleNoise);
+        volumeSlider.addEventListener('input', () => {
+            if (currentNoise) {
+                document.getElementById(`${currentNoise}-sound`).volume = volumeSlider.value / 100;
+            }
+        });
+        
+        // 错题收集功能
+        const fileInput = document.getElementById('file-input');
+        const dropArea = document.getElementById('drop-area');
+        const takePhotoBtn = document.getElementById('take-photo');
+        const uploadPhotoBtn = document.getElementById('upload-photo');
+        const mistakePreview = document.getElementById('mistake-preview');
+        const analysisResult = document.getElementById('analysis-result');
+        const noAnalysis = document.getElementById('no-analysis');
+        const mistakesList = document.getElementById('mistakes-list');
+        
+        // 错误类型、主题和难度选项
+        const errorTypes = ["概念错误", "计算错误", "粗心错误", "理解错误", "方法错误"];
+        const errorTopics = ["函数", "代数", "几何", "概率统计", "物理", "化学", "生物", "历史", "地理", "语文", "英语"];
+        const errorDifficulties = ["简单", "中等难度", "困难"];
+        
+        // 错误分析描述模板
+        const errorDescriptions = {
+            "概念错误": "对基本概念理解不透彻，建议复习相关章节的基础定义和性质。",
+            "计算错误": "计算过程中出现失误，建议多做练习并注意计算步骤的检查。",
+            "粗心错误": "题目理解或审题不够仔细，建议放慢速度，圈画关键信息。",
+            "理解错误": "对题目的要求或条件理解有误，建议多读几遍题目，画出示意图。",
+            "方法错误": "解题思路或方法不正确，建议参考例题，学习正确的解题方法。"
+        };
+        
+        // 改进建议模板
+        const improvementSuggestions = {
+            "概念错误": [
+                "复习相关概念的定义和性质",
+                "制作概念思维导图",
+                "完成5道针对性练习题"
+            ],
+            "计算错误": [
+                "进行专项计算训练",
+                "使用草稿纸规范计算步骤",
+                "每道题计算后进行验算"
+            ],
+            "粗心错误": [
+                "练习审题技巧，圈画关键词",
+                "放慢解题速度，确保理解题意",
+                "建立错题检查清单"
+            ],
+            "理解错误": [
+                "多做阅读理解类题目",
+                "练习将复杂问题分解为简单问题",
+                "与同学讨论题目理解"
+            ],
+            "方法错误": [
+                "学习并掌握正确的解题方法",
+                "分析例题的解题思路",
+                "尝试用不同方法解决同一问题"
+            ]
+        };
+        
+        // 点击上传区域触发文件选择
+        dropArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // 拖放功能
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.classList.add('border-primary');
+        }
+        
+        function unhighlight() {
+            dropArea.classList.remove('border-primary');
+        }
+        
+        // 处理文件上传
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const file = dt.files[0];
+            
+            if (file) {
+                handleImage(file);
+            }
+        }
+        
+        // 处理文件选择
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleImage(file);
+            }
+        });
+        
+        // 拍照按钮
+        takePhotoBtn.addEventListener('click', () => {
+            // 使用capture属性触发相机
+            fileInput.setAttribute('capture', 'environment');
+            fileInput.click();
+        });
+        
+        // 上传按钮
+        uploadPhotoBtn.addEventListener('click', () => {
+            // 不使用相机，从相册选择
+            fileInput.removeAttribute('capture');
+            fileInput.click();
+        });
+        
+        // 处理图片并进行分析
+        function handleImage(file) {
+            // 显示图片预览
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                mistakePreview.src = e.target.result;
+                
+                // 显示分析结果区域
+                analysisResult.classList.remove('hidden');
+                noAnalysis.classList.add('hidden');
+                
+                // 模拟分析过程
+                simulateAnalysis();
+                
+                // 添加到错题记录
+                addMistakeRecord(file.name);
+            }
+            reader.readAsDataURL(file);
+        }
+        
+        // 模拟错题分析
+        function simulateAnalysis() {
+            // 随机选择错误类型、主题和难度
+            const randomType = errorTypes[Math.floor(Math.random() * errorTypes.length)];
+            const randomTopic = errorTopics[Math.floor(Math.random() * errorTopics.length)];
+            const randomDifficulty = errorDifficulties[Math.floor(Math.random() * errorDifficulties.length)];
+            
+            // 更新分析结果
+            document.getElementById('error-type').textContent = randomType;
+            document.getElementById('error-topic').textContent = randomTopic;
+            document.getElementById('error-difficulty').textContent = randomDifficulty;
+            document.getElementById('error-description').textContent = errorDescriptions[randomType];
+            
+            // 更新改进建议
+            const suggestionsList = document.getElementById('improvement-suggestions');
+            suggestionsList.innerHTML = '';
+            
+            improvementSuggestions[randomType].forEach(suggestion => {
+                const li = document.createElement('li');
+                li.className = 'flex items-start';
+                li.innerHTML = `<i class="fa fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>${suggestion}</span>`;
+                suggestionsList.appendChild(li);
+            });
+        }
+        
+        // 添加错题记录
+        function addMistakeRecord(filename) {
+            // 获取当前日期
+            const date = new Date();
+            const dateString = date.toLocaleDateString();
+            
+            // 获取错误类型和主题
+            const errorType = document.getElementById('error-type').textContent;
+            const errorTopic = document.getElementById('error-topic').textContent;
+            
+            // 创建新的表格行
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-50 transition-colors';
+            tr.innerHTML = `
+                <td class="py-3 px-4 whitespace-nowrap">${dateString}</td>
+                <td class="py-3 px-4 whitespace-nowrap">${errorTopic}</td>
+                <td class="py-3 px-4 whitespace-nowrap">${errorType}</td>
+                <td class="py-3 px-4 whitespace-nowrap">
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                        未复习
+                    </span>
+                </td>
+                <td class="py-3 px-4 whitespace-nowrap">
+                    <button class="text-primary hover:text-primary/80 mr-3 transition-colors">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    <button class="text-green-500 hover:text-green-600 mr-3 transition-colors">
+                        <i class="fa fa-check"></i>
+                    </button>
+                    <button class="text-red-500 hover:text-red-600 transition-colors">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            // 如果是第一条记录，清空"还没有错题记录"提示
+            if (mistakesList.querySelector('td[colspan="5"]')) {
+                mistakesList.innerHTML = '';
+            }
+            
+            // 添加到表格开头
+            mistakesList.insertBefore(tr, mistakesList.firstChild);
+        }
+        
+        // 番茄钟功能
+        const pomodoroDisplay = document.getElementById('pomodoro-display');
+        const startPomodoroBtn = document.getElementById('start-pomodoro');
+        const pausePomodoroBtn = document.getElementById('pause-pomodoro');
+        const resetPomodoroBtn = document.getElementById('reset-pomodoro');
+        const pomodoroModeBtn = document.getElementById('pomodoro-mode');
+        const shortBreakModeBtn = document.getElementById('short-break-mode');
+        const pomodoroCount = document.getElementById('pomodoro-count');
+        const currentCycle = document.getElementById('current-cycle');
+        const pomodoroHistory = document.getElementById('pomodoro-history');
+        
+        // 番茄钟配置
+        const POMODORO_DURATION = 25 * 60; // 25分钟
+        const SHORT_BREAK_DURATION = 5 * 60; // 5分钟
+        const LONG_BREAK_DURATION = 15 * 60; // 15分钟
+        const CYCLES_BEFORE_LONG_BREAK = 4;
+        
+        let pomodoroInterval;
+        let remainingSeconds = POMODORO_DURATION;
+        let isPomodoroRunning = false;
+        let isInBreak = false;
+        let completedPomodoros = 0;
+        let cycleCount = 1;
+        
+        // 格式化时间显示
+        function formatPomodoroTime(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // 更新番茄钟显示
+        function updatePomodoroDisplay() {
+            pomodoroDisplay.textContent = formatPomodoroTime(remainingSeconds);
+        }
+        
+        // 开始番茄钟
+        function startPomodoro() {
+            if (!isPomodoroRunning) {
+                isPomodoroRunning = true;
+                startPomodoroBtn.classList.add('hidden');
+                pausePomodoroBtn.classList.remove('hidden');
+                
+                pomodoroInterval = setInterval(() => {
+                    remainingSeconds--;
+                    updatePomodoroDisplay();
+                    
+                    if (remainingSeconds <= 0) {
+                        completePomodoro();
+                    }
+                }, 1000);
+            }
+        }
+        
+        // 暂停番茄钟
+        function pausePomodoro() {
+            if (isPomodoroRunning) {
+                isPomodoroRunning = false;
+                clearInterval(pomodoroInterval);
+                startPomodoroBtn.classList.remove('hidden');
+                pausePomodoroBtn.classList.add('hidden');
+            }
+        }
+        
+        // 重置番茄钟
+        function resetPomodoro() {
+            clearInterval(pomodoroInterval);
+            isPomodoroRunning = false;
+            remainingSeconds = isInBreak ? SHORT_BREAK_DURATION : POMODORO_DURATION;
+            updatePomodoroDisplay();
+            startPomodoroBtn.classList.remove('hidden');
+            pausePomodoroBtn.classList.add('hidden');
+        }
+        
+        // 完成一个番茄钟
+        function completePomodoro() {
+            clearInterval(pomodoroInterval);
+            isPomodoroRunning = false;
+            
+            // 播放提示音
+            const audio = new Audio('https://freesound.org/data/previews/178/178095_1165056-lq.mp3');
+            audio.play();
+            
+            if (!isInBreak) {
+                // 完成一个专注时段
+                completedPomodoros++;
+                pomodoroCount.textContent = completedPomodoros;
+                
+                // 记录完成的番茄钟
+                addPomodoroRecord();
+                
+                // 检查是否需要长休息
+                if (cycleCount % CYCLES_BEFORE_LONG_BREAK === 0) {
+                    // 长休息
+                    alert('恭喜完成4个番茄钟！现在可以休息15分钟了。');
+                    switchToLongBreak();
+                } else {
+                    // 短休息
+                    alert('专注时段完成！现在可以休息5分钟了。');
+                    switchToShortBreak();
+                }
+            } else {
+                // 完成一个休息时段
+                alert('休息时间结束！准备开始新的专注时段吧。');
+                switchToPomodoro();
+                cycleCount++;
+                currentCycle.textContent = `${cycleCount}/${CYCLES_BEFORE_LONG_BREAK}`;
+            }
+            
+            startPomodoroBtn.classList.remove('hidden');
+            pausePomodoroBtn.classList.add('hidden');
+        }
+        
+        // 切换到专注模式
+        function switchToPomodoro() {
+            isInBreak = false;
+            remainingSeconds = POMODORO_DURATION;
+            updatePomodoroDisplay();
+            
+            pomodoroModeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            pomodoroModeBtn.classList.add('bg-primary', 'text-white');
+            
+            shortBreakModeBtn.classList.remove('bg-primary', 'text-white');
+            shortBreakModeBtn.classList.add('bg-gray-200', 'text-gray-700');
+            
+            pomodoroDisplay.classList.remove('text-green-500');
+            pomodoroDisplay.classList.add('text-dark');
+        }
+        
+        // 切换到短休息模式
+        function switchToShortBreak() {
+            isInBreak = true;
+            remainingSeconds = SHORT_BREAK_DURATION;
+            updatePomodoroDisplay();
+            
+            pomodoroModeBtn.classList.remove('bg-primary', 'text-white');
+            pomodoroModeBtn.classList.add('bg-gray-200', 'text-gray-700');
+            
+            shortBreakModeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            shortBreakModeBtn.classList.add('bg-primary', 'text-white');
+            
+            pomodoroDisplay.classList.remove('text-dark');
+            pomodoroDisplay.classList.add('text-green-500');
+        }
+        
+        // 切换到长休息模式
+        function switchToLongBreak() {
+            isInBreak = true;
+            remainingSeconds = LONG_BREAK_DURATION;
+            updatePomodoroDisplay();
+            
+            pomodoroModeBtn.classList.remove('bg-primary', 'text-white');
+            pomodoroModeBtn.classList.add('bg-gray-200', 'text-gray-700');
+            
+            shortBreakModeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+            shortBreakModeBtn.classList.add('bg-primary', 'text-white');
+            
+            pomodoroDisplay.classList.remove('text-dark');
+            pomodoroDisplay.classList.add('text-green-500');
+        }
+        
+        // 添加番茄钟记录
+        function addPomodoroRecord() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            
+            const recordElement = document.createElement('div');
+            recordElement.className = 'bg-white p-3 rounded-lg shadow-sm flex justify-between items-center';
+            recordElement.innerHTML = `
+                <div>
+                    <span class="font-medium">番茄钟 #${completedPomodoros}</span>
+                </div>
+                <div class="text-gray-500 text-sm">
+                    ${timeString}
+                </div>
+            `;
+            
+            // 如果是第一条记录，清空提示
+            if (pomodoroHistory.querySelector('.text-gray-500')) {
+                pomodoroHistory.innerHTML = '';
+            }
+            
+            // 添加到记录列表开头
+            pomodoroHistory.insertBefore(recordElement, pomodoroHistory.firstChild);
+        }
+        
+        // 事件监听
+        startPomodoroBtn.addEventListener('click', startPomodoro);
+        pausePomodoroBtn.addEventListener('click', pausePomodoro);
+        resetPomodoroBtn.addEventListener('click', resetPomodoro);
+        pomodoroModeBtn.addEventListener('click', switchToPomodoro);
+        shortBreakModeBtn.addEventListener('click', switchToShortBreak);
+        
+        // 初始化番茄钟显示
+        updatePomodoroDisplay();
+        
+        // 初始化图表
+        function initChart() {
+            const ctx = document.getElementById('study-chart').getContext('2d');
+            
+            // 模拟过去7天的学习数据
+            const data = {
+                labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                datasets: [{
+                    label: '学习时长(小时)',
+                    data: [2.5, 1.8, 3.2, 0, 2.1, 4.5, 3.8],
+                    backgroundColor: 'rgba(22, 93, 255, 0.2)',
+                    borderColor: 'rgba(22, 93, 255, 1)',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    tension: 0.3
+                }]
+            };
+            
+            const config = {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            };
+            
+            new Chart(ctx, config);
+        }
+        
+        // 保存学习记录
+        function saveStudyRecord(durationSeconds) {
+            // 这里可以添加保存到本地存储或服务器的逻辑
+            console.log(`保存学习记录: ${durationSeconds}秒`);
+        }
+        
+        // 更新统计信息
+        function updateStats() {
+            // 这里可以添加从本地存储或服务器获取并更新统计信息的逻辑
+            console.log('更新统计信息');
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('load', function() {
+            initChart();
+        });
+        
+        // 注册 Service Worker (PWA)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then((registration) => {
+                        console.log('ServiceWorker 注册成功:', registration.scope);
+                    })
+                    .catch((err) => {
+                        console.log('ServiceWorker 注册失败:', err);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
